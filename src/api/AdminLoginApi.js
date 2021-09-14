@@ -7,3 +7,11 @@ export function adminLogin(params) {
     params
   })
 }
+
+export function queryDirctionAll(data) {
+  return request({
+    url: '/queryAll',
+    method: 'post',
+    data
+  })
+}

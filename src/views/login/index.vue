@@ -54,6 +54,8 @@
 
 <script>
 // import { validUsername } from '@/utils/validate'
+import util from '../utils/Utils.js'
+import { adminLogin, queryDirctionAll } from '@/api/AdminLoginApi'
 
 export default {
   name: 'Login',
@@ -76,8 +78,8 @@ export default {
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: '',
+        password: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
