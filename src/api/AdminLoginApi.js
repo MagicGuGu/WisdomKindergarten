@@ -15,3 +15,11 @@ export function queryDirctionAll(data) {
     data
   })
 }
+
+export function getToken(data) {
+  return request({
+    url: '/getToken',
+    method: 'post',
+    data
+  })
+}

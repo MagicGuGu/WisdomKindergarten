@@ -41,6 +41,30 @@
         </span>
       </el-form-item>
 
+      <el-form-item prop="picCode">
+        <span class="svg-container">
+          <svg-icon icon-class="orange" />
+        </span>
+        <el-input
+          ref="picCode"
+          v-model="loginForm.picCode"
+          placeholder="验证码"
+          name="picCode"
+          type="text"
+          tabindex="1"
+          auto-complete="on"
+        />
+      </el-form-item>
+
+      <div class="field">
+        <el-image
+          style="width: 100%; height: 50px"
+          :src="codePath"
+          @click="changeCode"
+        />
+      </div>
+      <br>
+
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
 
       <div class="tips">
@@ -54,8 +78,8 @@
 
 <script>
 // import { validUsername } from '@/utils/validate'
-import util from '../utils/Utils.js'
-import { adminLogin, queryDirctionAll } from '@/api/AdminLoginApi'
+import util from '@/utils/Utils.js'
+import { adminLogin, queryDirctionAll, getToken } from '@/api/AdminLoginApi'
 
 export default {
   name: 'Login',
@@ -68,9 +92,10 @@ export default {
       }
     }
     const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('密码不得小于6位'))
-      } else if (value.length > 16) {
+      // if (value.length < 6) {
+      //   callback(new Error('密码不得小于6位'))
+      // } else
+      if (value.length > 16) {
         callback(new Error('密码不得大于16位'))
       } else {
         callback()
@@ -79,7 +104,8 @@ export default {
     return {
       loginForm: {
         username: '',
-        password: ''
+        password: '',
+        picCode: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -87,7 +113,8 @@ export default {
       },
       loading: false,
       passwordType: 'password',
-      redirect: undefined
+      redirect: undefined,
+      codePath: process.env.VUE_APP_BASE_API + 'captcha'
     }
   },
   watch: {
@@ -110,20 +137,57 @@ export default {
       })
     },
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
-          }).catch(() => {
-            this.loading = false
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
+      const loading = this.$loading({
+        lock: true,
+        text: '加载中....',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
       })
+      // 调用adminLogin的Axios
+      adminLogin({
+        adminName: this.loginForm.username,
+        adminPwd: this.loginForm.password,
+        code: this.loginForm.picCode
+      })
+        // 成功
+        .then((resp) => {
+          if (resp.code === 200) {
+            loading.close()
+            // this.$router.push('/adminMain')
+            alert('登陆成功')
+          } else {
+            loading.close()
+          }
+        })
+        // 生命周期最后
+        .finally(() => {
+          loading.close()
+        })
+    }, // 更改验证码
+    changeCode() {
+      this.codePath = this.codePath + '?' + Math.random()
+    }, // 初始化字典表
+    // 初始化字典表
+    initDict() {
+      queryDirctionAll({
+      })
+        // 成功
+        .then((resp) => {
+          if (resp.code === 200) {
+            util.saveDict(resp.dict)
+          }
+        })
+    },
+    // 获取token
+    initToken() {
+      getToken({
+      })
+        // 成功
+        .then((resp) => {
+          if (resp.code === 200) {
+            util.saveToken2Session(resp.tokenMap.token)
+          }
+        })
     }
   }
 }
